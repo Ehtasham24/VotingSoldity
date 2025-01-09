@@ -2,28 +2,27 @@
 pragma solidity ^0.8.0;
 
 contract WholesalerRetailer {
-    // Struct to represent a product
+   
     struct Product {
         uint256 id;
         string name;
         uint256 price;
-        address owner; // Current owner of the product
-        bool isSold;   // Tracks if the product is sold
+        address owner; 
+        bool isSold;   
     }
 
-    // Events
     event ProductAdded(uint256 productId, string name, uint256 price, address addedBy);
     event ProductPurchased(uint256 productId, address purchasedBy);
 
-    // State variables
+
     address public wholesaler;
     uint256 public productCounter = 0;
-    mapping(uint256 => Product) public products; // productId => Product details
+    mapping(uint256 => Product) public products; 
 
-    // Access control: retailer registration
+    
     mapping(address => bool) public registeredRetailers;
 
-    // Modifiers
+
     modifier onlyWholesaler() {
         require(msg.sender == wholesaler, "Only wholesaler can perform this action");
         _;
@@ -44,12 +43,11 @@ contract WholesalerRetailer {
         _;
     }
 
-    // Constructor to initialize wholesaler
+ 
     constructor() {
-        wholesaler = msg.sender; // Deploying address is the wholesaler
+        wholesaler = msg.sender; 
     }
 
-    // Wholesaler adds a product to the supply chain
     function addProduct(string memory _name, uint256 _price) public onlyWholesaler {
         productCounter++;
         products[productCounter] = Product({
@@ -62,13 +60,13 @@ contract WholesalerRetailer {
         emit ProductAdded(productCounter, _name, _price, msg.sender);
     }
 
-    // Wholesaler registers a retailer
+
     function registerRetailer(address _retailer) public onlyWholesaler {
         require(_retailer != address(0), "Invalid address");
         registeredRetailers[_retailer] = true;
     }
 
-    // Retailer purchases a product
+
     function purchaseProduct(uint256 _productId) 
         public 
         payable 
@@ -78,20 +76,20 @@ contract WholesalerRetailer {
     {
         Product storage product = products[_productId];
 
-        // Ensure the sent value matches the product price
+      // Check if the payment is sufficient
         require(msg.value >= product.price, "Insufficient payment");
 
-        // Transfer ownership to the retailer
+  
         product.owner = msg.sender;
         product.isSold = true;
 
-        // Transfer payment to the wholesaler
+
         payable(wholesaler).transfer(product.price);
 
         emit ProductPurchased(_productId, msg.sender);
     }
 
-    // View details of a product
+    // Details of a product
     function getProduct(uint256 _productId) 
         public 
         view 
@@ -102,7 +100,7 @@ contract WholesalerRetailer {
         return (product.name, product.price, product.owner, product.isSold);
     }
 
-    // Check if an address is a registered retailer
+    // Check if a retailer is registered
     function isRegisteredRetailer(address _retailer) public view returns (bool) {
         return registeredRetailers[_retailer];
     }
